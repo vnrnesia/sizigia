@@ -150,6 +150,11 @@
   align-items: center;
   gap: 8px;
   z-index: 100;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.scrollIndicator.show {
   opacity: 0.7;
 }
 
@@ -164,6 +169,36 @@
 
 .scrollArrow {
   animation: float 2s ease-in-out infinite;
+}
+
+.videoButton {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  padding: 12px 24px;
+  background-color: white;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.videoButton.show {
+  opacity: 1;
+}
+
+.buttonText {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  color: black;
+  transition: font-size 0.5s ease-in-out;
+}
+
+.videoButton.show .buttonText {
+  font-size: 1.1rem;
 }
 
 @keyframes float {

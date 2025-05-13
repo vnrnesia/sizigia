@@ -14,9 +14,25 @@
   transition: background 0.3s ease;
 }
 
-.header:hover {
-  background: rgba(0,0,0,0.8);
+@keyframes fadeToBlack {
+  0% {
+    color: white;  /* Başlangıçta beyaz */
+  }
+  100% {
+    color: black;  /* Sonunda siyah */
+  }
 }
+
+.header .logo, .header .navLink {
+  color: white; /* Başlangıçta beyaz renk */
+  transition: color 2s ease; /* Geçiş süresi eklendi */
+}
+
+.header.blackText .logo, .header.blackText .navLink {
+  animation: fadeToBlack 2s ease forwards; /* Sadece About sayfasında siyaha dönüş animasyonu */
+}
+
+
 
 .logo {
   font-family: 'Inter', sans-serif;
@@ -60,3 +76,29 @@
 .navLink:hover::after {
   width: 100%;
 } 
+
+.navLink {
+  color: white;
+  text-decoration: none;
+  margin: 0 1rem;
+}
+
+.blackText {
+  color: black;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.navLink {
+  color: white;
+  text-decoration: none;
+  margin: 0 1rem;
+}
+
+.blackText {
+  color: black;
+}
