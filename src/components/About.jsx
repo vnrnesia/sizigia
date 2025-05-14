@@ -5,8 +5,9 @@ function About() {
   return (
     <>
       <div className={styles.centeredText} >
-        Умный дамах <br />
+        Умный дамах 
       </div>
+      aaaaa
     </>
   );
 }

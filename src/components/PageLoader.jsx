@@ -15,10 +15,10 @@ const PageLoader = () => {
   }, [isFading]);
 
   useEffect(() => {
-    // Start fade out animation after a brief delay
+    // Start fade out animation after 5 seconds
     const timer = setTimeout(() => {
       setIsFading(true);
-    }, 200);
+    }, 5000);
     return () => clearTimeout(timer);
   }, []);
 
