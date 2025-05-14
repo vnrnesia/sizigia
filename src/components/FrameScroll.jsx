@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./FrameScroll.module.css";
 import { motion, AnimatePresence } from "framer-motion";
+import PageLoader from "./PageLoader";
 
-const CHUNK_SIZE = 10; 
+const CHUNK_SIZE = 10;
 const PRELOAD_AHEAD = 20;
+const INITIAL_FRAMES_TO_LOAD = 106;
+
 const FrameScroll = () => {
   const navigate = useNavigate();
   const [currentFrame, setCurrentFrame] = useState(1);
@@ -14,15 +17,16 @@ const FrameScroll = () => {
   const [currentText, setCurrentText] = useState("всем");
   const [fadeOutText, setFadeOutText] = useState("");
   const [isTextTransitioning, setIsTextTransitioning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedFrames, setLoadedFrames] = useState(0);
   const totalFrames = 106;
-  
+
   const canvasRef = useRef(null);
   const frameImagesRef = useRef({});
   const loadingChunksRef = useRef(new Set());
 
-  const texts = ["всем", "привет", "севодня", "мы", "посмотрим", "сизигиа"];
+  const texts = ["всем", "привет", "севодня", "мы", "посмотрим", "мы", "посмотрим", "мы", "посмотрим", "всем", "привет", "севодня", "мы", "посмотрим", "мы", "посмотрим", "мы", "посмотрим", "сизигиа"];
 
- 
   const loadFrameChunk = async (startFrame, endFrame) => {
     const chunkKey = `${startFrame}-${endFrame}`;
     if (loadingChunksRef.current.has(chunkKey)) return;
@@ -35,7 +39,20 @@ const FrameScroll = () => {
         const frameNum = String(i).padStart(3, "0");
         img.src = `/frames/frame_${frameNum}.webp`;
         await new Promise((resolve) => {
-          img.onload = resolve;
+          img.onload = () => {
+            setLoadedFrames(prev => {
+              const newCount = prev + 1;
+              if (newCount === INITIAL_FRAMES_TO_LOAD) {
+                setIsLoading(false);
+              }
+              return newCount;
+            });
+            resolve();
+          };
+          img.onerror = () => {
+            console.error(`Failed to load frame ${frameNum}`);
+            resolve();
+          };
         });
         frameImagesRef.current[i] = img;
       }
@@ -43,7 +60,6 @@ const FrameScroll = () => {
     
     loadingChunksRef.current.delete(chunkKey);
   };
-
 
   const drawFrame = (frameNumber) => {
     const canvas = canvasRef.current;
@@ -82,7 +98,7 @@ const FrameScroll = () => {
       setScrollProgress(scrollPercentage);
 
       const textIndex = Math.min(
-        Math.floor(scrollPercentage * texts.length),
+        Math.floor(scrollPercentage * texts.length * 1.5),
         texts.length - 1
       );
 
@@ -95,7 +111,7 @@ const FrameScroll = () => {
         setTimeout(() => {
           setFadeOutText("");
           setIsTextTransitioning(false);
-        }, 600);
+        }, 300);
       }
 
       const frameNumber = Math.min(
@@ -105,7 +121,6 @@ const FrameScroll = () => {
 
       setCurrentFrame(frameNumber);
 
-      // Preload next chunk of frames
       const nextChunkStart = Math.min(frameNumber + 1, totalFrames);
       const nextChunkEnd = Math.min(frameNumber + PRELOAD_AHEAD, totalFrames);
       loadFrameChunk(nextChunkStart, nextChunkEnd);
@@ -133,13 +148,11 @@ const FrameScroll = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [currentText, showVideo, isTransitioning, isTextTransitioning]);
 
-  // Initial frame loading
   useEffect(() => {
     const initialChunkEnd = Math.min(CHUNK_SIZE, totalFrames);
     loadFrameChunk(1, initialChunkEnd);
   }, []);
 
-  // Draw frame when it changes
   useEffect(() => {
     drawFrame(currentFrame);
   }, [currentFrame]);
@@ -154,6 +167,7 @@ const FrameScroll = () => {
 
   return (
     <>
+      {isLoading && <PageLoader />}
       <div className={styles.container}>
         <div
           className={`${styles.frameContainer} ${
@@ -191,7 +205,7 @@ const FrameScroll = () => {
               initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className={styles.text}
             >
               {currentText}
