@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./FrameScroll.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 
+const CHUNK_SIZE = 10; 
+const PRELOAD_AHEAD = 20;
 const FrameScroll = () => {
   const navigate = useNavigate();
   const [currentFrame, setCurrentFrame] = useState(1);
@@ -13,8 +15,62 @@ const FrameScroll = () => {
   const [fadeOutText, setFadeOutText] = useState("");
   const [isTextTransitioning, setIsTextTransitioning] = useState(false);
   const totalFrames = 106;
+  
+  const canvasRef = useRef(null);
+  const frameImagesRef = useRef({});
+  const loadingChunksRef = useRef(new Set());
 
   const texts = ["всем", "привет", "севодня", "мы", "посмотрим", "сизигиа"];
+
+ 
+  const loadFrameChunk = async (startFrame, endFrame) => {
+    const chunkKey = `${startFrame}-${endFrame}`;
+    if (loadingChunksRef.current.has(chunkKey)) return;
+    
+    loadingChunksRef.current.add(chunkKey);
+    
+    for (let i = startFrame; i <= endFrame && i <= totalFrames; i++) {
+      if (!frameImagesRef.current[i]) {
+        const img = new Image();
+        const frameNum = String(i).padStart(3, "0");
+        img.src = `/frames/frame_${frameNum}.webp`;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+        });
+        frameImagesRef.current[i] = img;
+      }
+    }
+    
+    loadingChunksRef.current.delete(chunkKey);
+  };
+
+
+  const drawFrame = (frameNumber) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const img = frameImagesRef.current[frameNumber];
+    
+    if (img) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+        drawFrame(currentFrame);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [currentFrame]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,6 +105,11 @@ const FrameScroll = () => {
 
       setCurrentFrame(frameNumber);
 
+      // Preload next chunk of frames
+      const nextChunkStart = Math.min(frameNumber + 1, totalFrames);
+      const nextChunkEnd = Math.min(frameNumber + PRELOAD_AHEAD, totalFrames);
+      loadFrameChunk(nextChunkStart, nextChunkEnd);
+
       if (frameNumber === totalFrames && !showVideo && !isTransitioning) {
         setIsTransitioning(true);
         setTimeout(() => {
@@ -72,6 +133,17 @@ const FrameScroll = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [currentText, showVideo, isTransitioning, isTextTransitioning]);
 
+  // Initial frame loading
+  useEffect(() => {
+    const initialChunkEnd = Math.min(CHUNK_SIZE, totalFrames);
+    loadFrameChunk(1, initialChunkEnd);
+  }, []);
+
+  // Draw frame when it changes
+  useEffect(() => {
+    drawFrame(currentFrame);
+  }, [currentFrame]);
+
   const getTextPosition = () => {
     if (showVideo) {
       return "translate(-50%, -150%)";
@@ -88,9 +160,8 @@ const FrameScroll = () => {
             isTransitioning ? styles.transitioning : ""
           }`}
         >
-          <img
-            src={`/frames/frame_${String(currentFrame).padStart(3, "0")}.webp`}
-            alt={`Frame ${currentFrame}`}
+          <canvas
+            ref={canvasRef}
             className={`${styles.frame} ${
               showVideo || isTransitioning ? styles.fadeOut : ""
             }`}
