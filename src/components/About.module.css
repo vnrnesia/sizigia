@@ -26,3 +26,44 @@
   height: 100vh;
   background-color: white; 
 }
+
+.contentContainer {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translate(-50%, 500px); 
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  width: 80%;
+  max-width: 1200px;
+  padding: 2rem;
+}
+
+
+.contentBox {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contentBox:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contentBox h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.contentBox p {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
+}

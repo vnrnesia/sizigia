@@ -76,8 +76,8 @@ const FrameScroll = () => {
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
       if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = 1920;
+        canvas.height = 1080;
         drawFrame(currentFrame);
       }
     };
